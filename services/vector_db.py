@@ -1,13 +1,17 @@
 
-from getpass import getpass
+
 from dotenv import load_dotenv
 from pinecone import ServerlessSpec, Pinecone
 load_dotenv()
 import os
 os.environ["HF_HUB_ENABLE_HF_TRANSFER"] = "1"
 
-if not os.getenv("PINECONE_API_KEY"):
-    os.environ["PINECONE_API_KEY"] = getpass.getpass("Enter your Pinecone API key: ")
+import os
+
+PINECONE_API_KEY = os.getenv("PINECONE_API_KEY")
+
+if not PINECONE_API_KEY:
+    raise ValueError("PINECONE_API_KEY not set")
 
 pinecone_api_key = os.environ.get("PINECONE_API_KEY")
 
