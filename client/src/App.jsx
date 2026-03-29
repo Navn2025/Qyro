@@ -148,6 +148,21 @@ const Icon={
 }
 
 
+const API_BASE = import.meta.env.VITE_API_URL || '';
+
+/**
+ * Utility to construct API URLs.
+ * In development, it uses the relative path (proxied via Vite).
+ * In production (when VITE_API_URL is set), it prepends the base URL and strips the '/api' prefix.
+ */
+function getApiUrl(path) {
+  if (API_BASE) {
+    // If we have an absolute base URL, we strip the '/api' prefix used for the local proxy.
+    return `${API_BASE}${path.replace(/^\/api/, '')}`;
+  }
+  return path;
+}
+
 /* ────────────────────────────────────────────
    HELPERS
 ──────────────────────────────────────────── */
@@ -730,7 +745,7 @@ function SettingsModal({isOpen, onClose, userId})
   {
     if (isOpen&&userId)
     {
-      fetch(`/api/v1/chats/settings/${userId}`)
+      fetch(getApiUrl(`/api/v1/chats/settings/${userId}`))
         .then(r => r.json())
         .then(data =>
         {
@@ -749,7 +764,7 @@ function SettingsModal({isOpen, onClose, userId})
   const handleSave=() =>
   {
     setIsSaving(true)
-    fetch(`/api/v1/chats/settings/${userId}`, {
+    fetch(getApiUrl(`/api/v1/chats/settings/${userId}`), {
       method: 'PUT',
       headers: {'Content-Type': 'application/json'},
       body: JSON.stringify(keys)
@@ -890,7 +905,7 @@ export default function App()
     {
       try
       {
-        const res=await fetch('/api/v1/metadata/all')
+        const res=await fetch(getApiUrl('/api/v1/metadata/all'))
         if (res.ok)
         {
           const data=await res.json()
@@ -916,7 +931,7 @@ export default function App()
   useEffect(() =>
   {
     const localUser=localStorage.getItem('agent_user_id')
-    fetch('/api/v1/chats/init_user', {
+    fetch(getApiUrl('/api/v1/chats/init_user'), {
       method: 'POST',
       headers: {'Content-Type': 'application/json'},
       body: JSON.stringify({user_id: localUser})
@@ -934,7 +949,7 @@ export default function App()
   const fetchSessions=useCallback(() =>
   {
     if (!userId) return
-    fetch(`/api/v1/chats/sessions/${userId}`)
+    fetch(getApiUrl(`/api/v1/chats/sessions/${userId}`))
       .then(res => res.json())
       .then(data => setSessions(data))
       .catch(console.error)
@@ -963,7 +978,7 @@ export default function App()
     if (isRunning) return
 
     setIsSessionLoading(true)
-    fetch(`/api/v1/chats/sessions/${activeSessionId}/messages`)
+    fetch(getApiUrl(`/api/v1/chats/sessions/${activeSessionId}/messages`))
       .then(res => res.json())
       .then(data =>
       {
@@ -1037,7 +1052,7 @@ export default function App()
       ...(errorMsg!==undefined&&{errorMsg}),
     }
 
-    fetch('/api/v1/chats/messages', {
+    fetch(getApiUrl('/api/v1/chats/messages'), {
       method: 'POST',
       headers: {'Content-Type': 'application/json'},
       body: JSON.stringify({
@@ -1097,7 +1112,7 @@ export default function App()
     const isNewSession=!existing
 
     // Register or update session in DB
-    fetch('/api/v1/chats/sessions', {
+    fetch(getApiUrl('/api/v1/chats/sessions'), {
       method: 'POST',
       headers: {'Content-Type': 'application/json'},
       body: JSON.stringify({
@@ -1153,7 +1168,7 @@ export default function App()
         count: 0,
       }
 
-      const res=await fetch('/api/v1/generate/stream', {
+      const res=await fetch(getApiUrl('/api/v1/generate/stream'), {
         method: 'POST',
         headers: {'Content-Type': 'application/json'},
         body: JSON.stringify(body),
