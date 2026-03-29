@@ -1,7 +1,7 @@
 from typing import cast
 from state.state import State
 
-from models.models import QATable
+from db.db import Session as DefaultSession
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 from models.models import Base
@@ -33,13 +33,16 @@ def create_memory(state: State) -> dict:
     db_uri = state.get("api_keys", {}).get("db_uri", "")
     if db_uri and db_uri.strip():
         try:
+            print(f"Connecting to USER's private database: {db_uri}")
             temp_engine = create_engine(db_uri)
+            # Pre-initialize schema in user's DB for compatibility
             Base.metadata.create_all(bind=temp_engine)
             session = sessionmaker(bind=temp_engine)()
         except Exception as e:
-            print(f"Failed to connect to dynamic DB URI, falling back to default: {e}")
+            print(f"⚠️ Failed to connect to private DB URI, falling back to Primary DB: {e}")
             session = DefaultSession()
     else:
+        print("Using Primary Database (no private DB URI specified).")
         session = DefaultSession()
 
     saved: int = 0

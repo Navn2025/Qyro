@@ -1,10 +1,16 @@
-# from sqlalchemy import create_engine
-# from sqlalchemy.orm import sessionmaker
-# import os
-# from models.models import Base
+from sqlalchemy import create_engine
+from sqlalchemy.orm import sessionmaker
+import os
+from models.models import Base
 
-# DATABASE_URI = os.getenv("DATABASE_URI")
-# engine  = create_engine(DATABASE_URI)
+# This is the PRIMARY database for User Settings, API Keys, and Chat History.
+# Defaults to a local postgres instance if not specified via environment variables.
 
-# Base.metadata.create_all(bind=engine)
-# Session = sessionmaker(bind=engine)
+DATABASE_URI = os.getenv("DATABASE_URI", "postgresql://postgres:1234@localhost:5432/q&a_dataset")
+engine = create_engine(DATABASE_URI)
+
+# Ensure local tables exist in the primary DB (Settings, History etc.)
+Base.metadata.create_all(bind=engine)
+
+# The Session maker for the primary database
+Session = sessionmaker(bind=engine)
