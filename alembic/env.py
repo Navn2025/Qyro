@@ -1,5 +1,13 @@
 from logging.config import fileConfig
+import os
+from alembic import context
 
+config = context.config
+
+DATABASE_URI = os.getenv("DATABASE_URI")
+
+if DATABASE_URI:
+    config.set_main_option("sqlalchemy.url", DATABASE_URI)
 from sqlalchemy import engine_from_config
 from sqlalchemy import pool
 
