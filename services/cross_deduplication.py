@@ -1,7 +1,5 @@
-import numpy as np
-from sklearn.metrics.pairwise import cosine_similarity
 from state.state import State
-from services.embeddings import embeddings
+from services.embeddings import get_embeddings
 
 INTRA_BATCH_SIM_THRESHOLD = 0.82  # tune: lower = stricter dedup
 
@@ -18,6 +16,10 @@ def cross_batch_deduplicate(state: State) -> dict:
     print(f"Cross-batch dedup: checking {len(questions)} questions against each other...")
 
     # ── Step 1: Embed all questions in one pass ────────────────────────────
+    hf_token = state.get("api_keys", {}).get("hf", "")
+    embeddings = get_embeddings(hf_token)
+    
+    from sklearn.metrics.pairwise import cosine_similarity
     emb_list = [embeddings.embed_query(q.question_text) for q in questions]
     sim_matrix = cosine_similarity(emb_list)   # shape (N, N)
 

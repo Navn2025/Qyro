@@ -5,7 +5,7 @@ from db.db import Session as DefaultSession
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 from models.models import Base
-from services.vector_store import vector_store
+from services.vector_store import get_vector_store
 import uuid
 def create_memory(state: State) -> dict:
     """Persist only NON-duplicate Q&A pairs to PostgreSQL + Vector DB."""
@@ -111,6 +111,8 @@ def create_memory(state: State) -> dict:
     # 🚀 Batch insert into Vector DB
     # ─────────────────────────────
     if texts:
+        hf_token = state.get("api_keys", {}).get("hf", "")
+        vector_store = get_vector_store(hf_token)
         vector_store.add_texts(
             texts=texts,
             metadatas=metadatas

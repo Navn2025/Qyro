@@ -1,6 +1,7 @@
 from state.state import State
 from models.questions import QuestionExists
-from services.vector_store import vector_store, embeddings
+from services.vector_store import get_vector_store
+from services.embeddings import get_embeddings
 from langchain_core.messages import HumanMessage, SystemMessage
 from prompts.duplicate_check_prompt import CHECK_PROMPT
 
@@ -10,6 +11,13 @@ SIM_THRESHOLD = 0.85
 def check_duplicates(state: State):
     q = state["question"]
     print(f"Checking duplicate for QID {q.id}...")
+    
+    # ─────────────────────────────
+    # Step 0: Initialize dynamic services
+    # ─────────────────────────────
+    hf_token = state.get("api_keys", {}).get("hf", "")
+    vector_store = get_vector_store(hf_token)
+    embeddings = get_embeddings(hf_token)
 
     # ─────────────────────────────
     # Step 1: vector search
