@@ -1,6 +1,6 @@
 from typing import cast
 from state.state import State
-from db.db import Session as DefaultSession
+
 from models.models import QATable
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
