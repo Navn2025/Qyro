@@ -847,7 +847,6 @@ export default function App()
 {
   const [isSidebarOpen, setIsSidebarOpen]=useState(false)
   const [isConfigOpen, setIsConfigOpen]=useState(false)
-  const [isConfigCollapsed, setIsConfigCollapsed]=useState(false)
   const [showSettings, setShowSettings]=useState(false)
   const [params, setParams]=useState({
     subject: '',
@@ -1391,37 +1390,8 @@ export default function App()
         <div className="body">
           <SettingsModal isOpen={showSettings} onClose={() => setShowSettings(false)} userId={userId} />
 
-          {/* CHAT CONTAINER (Feed + Config Section on mobile) */}
+          {/* CHAT CONTAINER (Feed) */}
           <div className="chat-container">
-            {/* MOBILE ONLY: Integrated Config Section */}
-            <div className={`mobile-config-section ${isConfigCollapsed? 'collapsed':''}`}>
-              <button className="mobile-config-toggle" onClick={() => setIsConfigCollapsed(!isConfigCollapsed)}>
-                <div style={{display: 'flex', alignItems: 'center', gap: 10}}>
-                  <span style={{display: 'flex', width: 18, height: 18, color: 'var(--text-2)'}}><Icon.Wrench /></span> 
-                  <span>{isConfigCollapsed? 'Show Generation Parameters':'Hide Parameters'}</span>
-                </div>
-                <div style={{display: 'flex', width: 18, height: 18, transform: isConfigCollapsed? 'rotate(0deg)':'rotate(90deg)', transition: 'transform 0.3s', color: 'var(--text-3)'}}>
-                  <Icon.ChevronRight />
-                </div>
-              </button>
-              
-              <div className="mobile-config-content">
-                <FormPanel
-                  params={params}
-                  setParams={setParams}
-                  onGenerate={handleGenerate}
-                  onClear={() => setMessages([])}
-                  isRunning={isRunning}
-                  subjects={subjects}
-                  difficulties={difficulties}
-                  bloomLevels={bloomLevels}
-                  cooldown={cooldown}
-                  isOpen={true} 
-                />
-              </div>
-            </div>
-
-            {/* CHAT FEED */}
             <div className="chat-feed" ref={feedRef}>
             {isSessionLoading? (
               <div className="session-loader">
@@ -1485,11 +1455,12 @@ export default function App()
                 </div>
               </div>
             )}
+            </div>
           </div>
         </div>
 
         {/* DESKTOP SIDEBAR CONFIG PANEL */}
-        <div className="form-panel-wrapper desktop-only">
+        <div className={`form-panel-wrapper ${isConfigOpen ? 'active' : ''}`}>
             <FormPanel
               params={params}
               setParams={setParams}
@@ -1503,7 +1474,6 @@ export default function App()
               isOpen={true} 
             />
           </div>
-        </div>
       </main>
     </div>
   )
