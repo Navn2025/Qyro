@@ -129,6 +129,16 @@ class CreateMessageReq(BaseModel):
 
 @router.post("/messages")
 def upsert_message(req: CreateMessageReq, db: Session = Depends(get_db)):
+    # Defensive check: ensure the session exists before inserting a message
+    # (Fixes common race conditions where messages are sent before sessions are committed)
+    session_exists = db.query(ChatSession).filter(ChatSession.id == req.session_id).first()
+    if not session_exists:
+        # Create a basic placeholder session if it doesn't exists to avoid IntegrityError
+        # Actually, let's just return 400 if it's really missing, but since we await now, 
+        # it shouldn't happen.
+        print(f"⚠️ Warning: upsert_message called for non-existent session {req.session_id}. Raising exception.")
+        raise HTTPException(status_code=400, detail="Session does not exist.")
+
     from sqlalchemy.dialects.postgresql import insert as pg_insert
     stmt = pg_insert(ChatMessage).values(
         id=req.id,
