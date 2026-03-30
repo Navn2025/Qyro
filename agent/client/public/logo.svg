@@ -1,0 +1,22 @@
+<svg width="300" height="300" viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
+  <!-- Background -->
+  
+
+  <!-- Outer ring (clean + modern) -->
+  <circle cx="100" cy="100" r="60"
+          stroke="white"
+          stroke-width="8"
+          fill="none"
+          stroke-linecap="round"
+          stroke-dasharray="320 60"
+          transform="rotate(-40 100 100)"/>
+
+  <!-- Inner core (AI center) -->
+  <circle cx="100" cy="100" r="10" fill="white"/>
+
+  <!-- Minimal tail (abstract Q feel) -->
+  <path d="M120 120 L150 150"
+        stroke="white"
+        stroke-width="8"
+        stroke-linecap="round"/>
+</svg>

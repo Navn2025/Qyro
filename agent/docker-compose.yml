@@ -1,0 +1,31 @@
+services:
+  db:
+    image: postgres:15-alpine
+    container_name: qyro_db
+    restart: always
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: 1234
+      POSTGRES_DB: q&a_dataset
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+  agent:
+    build:
+      context: ./agent
+      dockerfile: Dockerfile
+    container_name: qyro_agent
+    restart: always
+    ports:
+      - "8000:8000"
+    environment:
+      - DATABASE_URI=postgresql://postgres:1234@db:5432/q&a_dataset
+    depends_on:
+      - db
+    env_file:
+      - ./agent/.env
+
+volumes:
+  postgres_data:
