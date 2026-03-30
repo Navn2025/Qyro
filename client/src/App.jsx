@@ -1112,7 +1112,7 @@ export default function App()
     const isNewSession=!existing
 
     // Register or update session in DB
-    fetch(getApiUrl('/api/v1/chats/sessions'), {
+    await fetch(getApiUrl('/api/v1/chats/sessions'), {
       method: 'POST',
       headers: {'Content-Type': 'application/json'},
       body: JSON.stringify({
