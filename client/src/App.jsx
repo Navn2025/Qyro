@@ -1100,7 +1100,6 @@ export default function App()
   {
     if (!params.subject.trim()||isRunning||!userId) return
     setIsConfigOpen(false)
-    setIsConfigCollapsed(true)
 
     const desc=subjects.find(s => s.name===params.subject)?.description||''
     const label=`${params.subject} (${params.difficulty})`
@@ -1386,81 +1385,80 @@ export default function App()
           </div>
         </header>
 
-        {/* BODY */}
-        <div className="body">
-          <SettingsModal isOpen={showSettings} onClose={() => setShowSettings(false)} userId={userId} />
+        {/* MAIN CONTENT AREA */}
+        <div className="app-content">
+          <div className="body">
+            <SettingsModal isOpen={showSettings} onClose={() => setShowSettings(false)} userId={userId} />
 
-          {/* CHAT CONTAINER (Feed) */}
-          <div className="chat-container">
-            <div className="chat-feed" ref={feedRef}>
-            {isSessionLoading? (
-              <div className="session-loader">
-                <div className="session-loader__spinner">
-                  <div className="session-loader__ring"></div>
-                  <div className="session-loader__icon"><Icon.QyroLogo /></div>
+            {/* CHAT CONTAINER (Feed) */}
+            <div className="chat-container">
+              <div className="chat-feed" ref={feedRef}>
+              {isSessionLoading? (
+                <div className="session-loader">
+                  <div className="session-loader__spinner">
+                    <div className="session-loader__ring"></div>
+                    <div className="session-loader__icon"><Icon.QyroLogo /></div>
+                  </div>
+                  <p className="session-loader__text">Loading session…</p>
                 </div>
-                <p className="session-loader__text">Loading session…</p>
-              </div>
-            ):!activeSessionId? (
-              <div className="empty-state">
-                <div className="empty-state__icon"><Icon.QyroLogo /></div>
-                <h2 className="empty-state__title">Ready to Generate</h2>
-                <p className="empty-state__desc">
-                  Configure your parameters on the right panel and<br/>
-                  click <strong>Generate Q&A</strong> to start the agent pipeline.<br/>
-                  Questions will stream in real-time.
-                </p>
-              </div>
-            ):(
-              messages.map(msg =>
-              {
-                if (msg.type==='user-config')
+              ):!activeSessionId? (
+                <div className="empty-state">
+                  <div className="empty-state__icon"><Icon.QyroLogo /></div>
+                  <h2 className="empty-state__title">Ready to Generate</h2>
+                  <p className="empty-state__desc">
+                    Configure your parameters and click <strong>Generate Q&A</strong> to start the agent pipeline.<br/>
+                    Questions will stream in real-time.
+                  </p>
+                </div>
+              ):(
+                messages.map(msg =>
                 {
-                  return <UserConfigBubble key={msg.id} params={msg.params} />
-                }
-                if (msg.type==='agent-stream')
-                {
-                  return (
-                    <AgentStreamBubble
-                      key={msg.id}
-                      {...(msg.payload || {})}
-                      id={msg.id}
-                    />
-                  )
-                }
-                if (msg.type==='qa-result')
-                {
-                  return (
-                    <QAResultBubble
-                      key={msg.id}
-                      result={msg.result}
-                      params={msg.params}
-                    />
-                  )
-                }
-                if (msg.type==='system')
-                {
-                  return <SystemMsg key={msg.id} msg={msg} />
-                }
-                return null
-              })
-            )}
-            {/* typing indicator while running */}
-            {isRunning&&(
-              <div className="msg-group agent" style={{paddingTop: 0}}>
-                <div className="msg-bubble" style={{paddingTop: 10, paddingBottom: 10}}>
-                  <div className="typing-dots">
-                    <span /><span /><span />
+                  if (msg.type==='user-config')
+                  {
+                    return <UserConfigBubble key={msg.id} params={msg.params} />
+                  }
+                  if (msg.type==='agent-stream')
+                  {
+                    return (
+                      <AgentStreamBubble
+                        key={msg.id}
+                        {...(msg.payload || {})}
+                        id={msg.id}
+                      />
+                    )
+                  }
+                  if (msg.type==='qa-result')
+                  {
+                    return (
+                      <QAResultBubble
+                        key={msg.id}
+                        result={msg.result}
+                        params={msg.params}
+                      />
+                    )
+                  }
+                  if (msg.type==='system')
+                  {
+                    return <SystemMsg key={msg.id} msg={msg} />
+                  }
+                  return null
+                })
+              )}
+              {/* typing indicator while running */}
+              {isRunning&&(
+                <div className="msg-group agent" style={{paddingTop: 0}}>
+                  <div className="msg-bubble" style={{paddingTop: 10, paddingBottom: 10}}>
+                    <div className="typing-dots">
+                      <span /><span /><span />
+                    </div>
                   </div>
                 </div>
+              )}
               </div>
-            )}
             </div>
           </div>
-        </div>
 
-        {/* DESKTOP SIDEBAR CONFIG PANEL */}
-        <div className={`form-panel-wrapper ${isConfigOpen ? 'active' : ''}`}>
+          <div className={`form-panel-wrapper ${isConfigOpen ? 'active' : ''}`}>
             <FormPanel
               params={params}
               setParams={setParams}
@@ -1474,6 +1472,7 @@ export default function App()
               isOpen={true} 
             />
           </div>
+        </div>
       </main>
     </div>
   )

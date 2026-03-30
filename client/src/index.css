@@ -308,11 +308,23 @@ body {
   background: var(--accent-dim);
 }
 
-/* ── BODY (messages + form) ── */
-.body {
+.app-content {
   flex: 1;
   display: flex;
   overflow: hidden;
+  position: relative;
+  min-width: 0;
+  min-height: 0;
+}
+
+/* ── BODY (messages) ── */
+.body {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  min-width: 0; /* Critical for flex shrinking */
+  min-height: 0;
 }
 
 /* ── CHAT FEED ── */
@@ -448,12 +460,13 @@ body {
 }
 
 .msg-bubble {
-  max-width: 1100px;
+  width: min(100%, 1100px);
   padding: 14px 18px;
   border-radius: var(--radius-lg);
   font-size: 14px;
   line-height: 1.65;
   position: relative;
+  overflow-wrap: anywhere;
 }
 
 .msg-group.user .msg-bubble {
@@ -480,8 +493,8 @@ body {
 
 /* ── STEP STREAM BUBBLE ── */
 .stream-bubble {
-  max-width: 1100px;
-  min-width: 300px;
+  width: min(100%, 1100px);
+  min-width: 0;
   background: var(--bg-1);
   border: 1px solid var(--border);
   border-radius: var(--radius-lg);
@@ -495,6 +508,8 @@ body {
   display: flex;
   align-items: center;
   justify-content: space-between;
+  gap: 10px;
+  flex-wrap: wrap;
   background: var(--bg-2);
 }
 
@@ -551,6 +566,12 @@ body {
   font-size: 12px;
   color: var(--text-2);
   font-family: var(--mono);
+  min-width: 0;
+}
+
+.stream-step span {
+  min-width: 0;
+  overflow-wrap: anywhere;
 }
 
 .stream-step__icon {
@@ -571,7 +592,7 @@ body {
 
 /* ── QA RESULT CARDS ── */
 .qa-result {
-  max-width: 1100px;
+  width: min(100%, 1100px);
   background: var(--bg-1);
   border: 1px solid var(--border);
   border-radius: var(--radius-lg);
@@ -586,6 +607,8 @@ body {
   display: flex;
   align-items: center;
   justify-content: space-between;
+  gap: 10px;
+  flex-wrap: wrap;
 }
 
 .qa-result__title {
@@ -720,6 +743,7 @@ body {
   font-size: 13px;
   color: var(--text-2);
   transition: all var(--transition);
+  overflow-wrap: anywhere;
 }
 
 .option.correct {
@@ -748,6 +772,8 @@ body {
   flex-direction: column;
   overflow: hidden;
   height: 100%;
+  min-width: 0;
+  min-height: 0;
 }
 
 .chat-feed {
@@ -758,12 +784,14 @@ body {
   padding: 32px 40px;
   background: var(--bg);
   scroll-behavior: smooth;
+  min-width: 0;
+  min-height: 0;
 }
 
 /* ── FORM PANEL ── */
 .form-panel {
-  width: 320px;
-  min-width: 320px;
+  width: min(100%, 320px);
+  min-width: 0;
   border-left: 1px solid var(--border);
   background: var(--bg-1);
   display: flex;
@@ -796,6 +824,7 @@ body {
   display: flex;
   flex-direction: column;
   gap: 18px;
+  min-height: 0;
 }
 
 .form-group {
@@ -1270,6 +1299,7 @@ body {
   width: 100%;
   max-width: 480px;
   max-height: 85vh;
+  margin: 16px;
   background: var(--bg-1);
   border: 1px solid var(--border-hi);
   border-radius: var(--radius-xl);
@@ -1305,6 +1335,14 @@ body {
 
 .mobile-only { display: none !important; }
 
+/* Configuration Panel Wrapper - Flex on Desktop, Drawer on Mobile */
+.form-panel-wrapper {
+  height: 100%;
+  display: flex;
+  transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+  z-index: 10;
+}
+
 /* Backdrop Overlay */
 .drawer-overlay {
   position: fixed;
@@ -1322,11 +1360,11 @@ body {
     top: 0;
     right: 0;
     bottom: 0;
-    width: 360px;
+    width: min(100vw, 360px);
     z-index: 1000;
     transform: translateX(100%);
-    transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1);
     box-shadow: -10px 0 40px rgba(0,0,0,0.5);
+    background: var(--bg-1);
     border-left: 1px solid var(--border-hi);
   }
 
@@ -1365,9 +1403,12 @@ body {
     padding: 0 16px;
   }
 
+  .topbar__title {
+    min-width: 0;
+  }
+
   .chat-feed {
     padding: 16px 20px;
-    height: calc(100vh - 60px); /* Explicit height if flex fails on some mobile Safari */
   }
 
   .msg-group {
@@ -1383,7 +1424,7 @@ body {
     font-size: 14px;
   }
 
-  .tag {
+  .topbar__title .tag {
     display: none;
   }
 }
@@ -1405,6 +1446,24 @@ body {
   .msg-bubble {
     padding: 12px 14px;
     font-size: 13px;
+  }
+
+  .stream-header,
+  .qa-result__header,
+  .qa-cards,
+  .qa-card,
+  .form-panel__head,
+  .form-panel__body,
+  .form-panel__footer,
+  .modal-header {
+    padding-left: 14px;
+    padding-right: 14px;
+  }
+
+  .modal-content {
+    max-height: calc(100vh - 24px);
+    margin: 12px;
+    border-radius: 18px;
   }
 
   .topbar__title {
