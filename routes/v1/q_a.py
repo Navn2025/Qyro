@@ -42,9 +42,10 @@ def generate_stream(state: InitialState, request: Request):
                 if state.user_id:
                     settings = db_session.query(UserSettings).filter(UserSettings.user_id == state.user_id).first()
                 
-                if not settings or not settings.gemini_api_key or not settings.groq_api_key:
-                    raise ValueError(
-                        "API keys are not configured. Please open Settings (⚙) and save your Gemini and Groq API keys before generating."
+                if not settings or not settings.gemini_api_key or not settings.groq_api_key or not settings.huggingfacehub_api_token:
+                    raise HTTPException(
+                        status_code=400,
+                        detail="API keys are not configured. Please open Settings (⚙) and save your Gemini, Groq AND HuggingFace keys before generating."
                     )
 
                 input_state["api_keys"] = {

@@ -34,7 +34,7 @@ def create_memory(state: State) -> dict:
     if db_uri and db_uri.strip():
         try:
             print(f"Connecting to USER's private database: {db_uri}")
-            temp_engine = create_engine(db_uri)
+            temp_engine = create_engine(db_uri, pool_pre_ping=True)
             # Pre-initialize schema in user's DB for compatibility
             Base.metadata.create_all(bind=temp_engine)
             session = sessionmaker(bind=temp_engine)()
