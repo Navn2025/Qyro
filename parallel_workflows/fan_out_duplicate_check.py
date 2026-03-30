@@ -13,6 +13,7 @@ def fan_out_duplicate_check(state: State):
                 "question": q,
                 "subject": state["subject"],
                 "difficulty": state["difficulty"],
+                "api_keys": state.get("api_keys", {})
             }
         )
         for q in state["questions"]
