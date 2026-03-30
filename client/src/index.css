@@ -1285,6 +1285,13 @@ body {
   color: var(--text-3);
 }
 
+.empty-state__action {
+  width: auto;
+  min-width: 220px;
+  margin-top: 8px;
+  padding-inline: 18px;
+}
+
 /* ── MODALS ── */
 .modal-overlay {
   position: fixed;
@@ -1456,6 +1463,11 @@ body {
   .msg-bubble {
     padding: 12px 14px;
     font-size: 13px;
+  }
+
+  .empty-state__action {
+    width: 100%;
+    min-width: 0;
   }
 
   .stream-header,

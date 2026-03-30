@@ -1409,6 +1409,13 @@ export default function App()
                     Configure your parameters and click <strong>Generate Q&A</strong> to start the agent pipeline.<br/>
                     Questions will stream in real-time.
                   </p>
+                  <button
+                    className="btn btn-primary empty-state__action mobile-only"
+                    type="button"
+                    onClick={() => setIsConfigOpen(true)}
+                  >
+                    <Icon.Send /> Generate Questions
+                  </button>
                 </div>
               ):(
                 messages.map(msg =>
