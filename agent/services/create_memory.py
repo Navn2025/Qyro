@@ -4,7 +4,7 @@ from state.state import State
 from db.db import Session as DefaultSession
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
-from models.models import Base
+from models.models import Base, QATable
 from services.vector_store import get_vector_store
 import uuid
 def create_memory(state: State) -> dict:
