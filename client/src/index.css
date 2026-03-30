@@ -311,18 +311,21 @@ body {
 .app-content {
   flex: 1;
   display: flex;
+  align-items: stretch;
   overflow: hidden;
   position: relative;
+  width: 100%;
   min-width: 0;
   min-height: 0;
 }
 
 /* ── BODY (messages) ── */
 .body {
-  flex: 1;
+  flex: 1 1 auto;
   display: flex;
   flex-direction: column;
   overflow: hidden;
+  width: 0;
   min-width: 0; /* Critical for flex shrinking */
   min-height: 0;
 }
@@ -790,7 +793,7 @@ body {
 
 /* ── FORM PANEL ── */
 .form-panel {
-  width: min(100%, 320px);
+  width: 100%;
   min-width: 0;
   border-left: 1px solid var(--border);
   background: var(--bg-1);
@@ -1337,8 +1340,13 @@ body {
 
 /* Configuration Panel Wrapper - Flex on Desktop, Drawer on Mobile */
 .form-panel-wrapper {
+  flex: 0 0 320px;
+  width: 320px;
+  min-width: 320px;
   height: 100%;
   display: flex;
+  align-self: stretch;
+  margin-left: auto;
   transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1);
   z-index: 10;
 }
@@ -1356,11 +1364,13 @@ body {
 /* ── TABLET BREAKPOINT (Hide Config Panel) ── */
 @media (max-width: 1150px) {
   .form-panel-wrapper {
+    flex: none;
     position: fixed;
     top: 0;
     right: 0;
     bottom: 0;
     width: min(100vw, 360px);
+    min-width: 0;
     z-index: 1000;
     transform: translateX(100%);
     box-shadow: -10px 0 40px rgba(0,0,0,0.5);
