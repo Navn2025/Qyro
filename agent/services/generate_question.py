@@ -29,7 +29,12 @@ def generate_question(state: State):
         ]
     )
 
+    run_id = int(state.get("run_id") or 0)
+    per_run_n = int(state.get("N") or len(result.questions) or 1)
+    base_id = run_id * per_run_n
+
     for i, q in enumerate(result.questions):
-        q.id = i + 1
+        # Keep IDs globally unique across parallel runs to prevent collisions.
+        q.id = base_id + i + 1
 
     return {"questions": result.questions, "duplicate_results": []}

@@ -88,9 +88,13 @@ def generate_stream(state: InitialState, request: Request):
                     final_questions = cross_d["questions"]
 
                 gen_a = chunk.get("generate_answer")
-                if gen_a and isinstance(gen_a, dict) and "answer" in gen_a:
-                    ans_obj = gen_a["answer"]
-                    final_answers = ans_obj.answers if ans_obj else []
+                if gen_a and isinstance(gen_a, dict):
+                    if "answers" in gen_a and gen_a["answers"]:
+                        final_answers.extend(gen_a["answers"])
+                    elif "answer" in gen_a:
+                        ans_obj = gen_a["answer"]
+                        if ans_obj and getattr(ans_obj, "answers", None):
+                            final_answers.extend(ans_obj.answers)
 
                 yield json.dumps({"step": "progress", "data": str(chunk)}) + "\n"
 

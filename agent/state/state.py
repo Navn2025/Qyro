@@ -2,7 +2,7 @@ from typing import List, TypedDict, Optional, Annotated, Literal
 from operator import add
 
 from models.questions import Question
-from models.answers import AnswerSet
+from models.answers import Answer, AnswerSet
 class State(TypedDict):
     subject: str
     difficulty: str
@@ -17,7 +17,9 @@ class State(TypedDict):
 
     duplicate_results: Annotated[List[dict], add]
 
+    answers: Annotated[List[Answer], add]
     answer: Optional[AnswerSet]
+    # real_world_application:Optional[bool,default=False]
 
     iteration: int
     count: int

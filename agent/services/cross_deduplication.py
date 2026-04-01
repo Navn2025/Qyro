@@ -40,10 +40,6 @@ def cross_batch_deduplicate(state: State) -> dict:
     unique_questions = [q for q, k in zip(questions, keep) if k]
     dropped = len(questions) - len(unique_questions)
 
-    # Always re-number IDs sequentially across all combined parallel workflows
-    for idx, q in enumerate(unique_questions):
-        q.id = idx + 1
-
     if dropped == 0:
         print("  ✅ No intra-batch duplicates found.")
         return {"questions": unique_questions}

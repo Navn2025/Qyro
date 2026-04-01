@@ -26,8 +26,10 @@ def create_memory(state: State) -> dict:
         if not dup_map.get(q.id) or not dup_map[q.id].exists
     ]
 
-    answer_obj = state.get("answer")
-    answers = answer_obj.answers if answer_obj else []
+    answers = state.get("answers", [])
+    if not answers:
+        answer_obj = state.get("answer")
+        answers = answer_obj.answers if answer_obj else []
     answer_map = {a.question_id: a for a in answers}
 
     db_uri = state.get("api_keys", {}).get("db_uri", "")
