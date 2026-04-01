@@ -1306,6 +1306,28 @@ export default function App()
           } else if (parsed.step==='completed')
           {
             updateAgentStream(streamMessageId, () => ({status: 'done'}))
+          } else if (parsed.step==='partial_result')
+          {
+            finalResult=parsed.result;
+            // Create or update the partial result message
+            setMessages(prev =>
+            {
+              const copy=[...prev];
+              const idx=copy.findIndex(m => m.id===`res-${sessionId}`);
+              if (idx>=0)
+              {
+                copy[idx]={...copy[idx], result: finalResult};
+              } else
+              {
+                copy.push({
+                  id: `res-${sessionId}`,
+                  type: 'qa-result',
+                  result: finalResult,
+                  params: {...params}
+                });
+              }
+              return copy;
+            });
           } else if (parsed.step==='result')
           {
             finalResult=parsed.result;
@@ -1339,12 +1361,30 @@ export default function App()
           iconName: 'check',
           text: 'Generation complete. Questions saved to Pinecone vector store.',
         }, sessionId)
-        addMessage({
-          id: `res-${Date.now()}`,
-          type: 'qa-result',
-          result: finalResult,
-          params: {...params}
-        }, sessionId)
+        // If we incrementally added the message, we still need to save the final state to DB.
+        setMessages(prev =>
+        {
+          let copy=[...prev];
+          let updatedResultMsg;
+          const idx=copy.findIndex(m => m.id===`res-${sessionId}`);
+          if (idx>=0)
+          {
+            updatedResultMsg={...copy[idx], result: finalResult};
+            copy[idx]=updatedResultMsg;
+          } else
+          {
+            updatedResultMsg={
+              id: `res-${sessionId}`,
+              type: 'qa-result',
+              result: finalResult,
+              params: {...params}
+            };
+            copy.push(updatedResultMsg);
+          }
+          // Only save to backend once generation is fully verified complete
+          saveMessage(updatedResultMsg, sessionId);
+          return copy;
+        });
 
         // Trigger frontend cooldown (45 seconds) visually and locally
         localStorage.setItem('nextRequestTime', Date.now()+(FRONTEND_COOLDOWN_SECONDS*1000))
