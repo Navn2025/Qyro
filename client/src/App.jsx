@@ -148,15 +148,17 @@ const Icon={
 }
 
 
-const API_BASE = import.meta.env.VITE_API_URL || '';
+const API_BASE=import.meta.env.VITE_API_URL||'';
 
 /**
  * Utility to construct API URLs.
  * In development, it uses the relative path (proxied via Vite).
  * In production (when VITE_API_URL is set), it prepends the base URL and strips the '/api' prefix.
  */
-function getApiUrl(path) {
-  if (API_BASE) {
+function getApiUrl(path)
+{
+  if (API_BASE)
+  {
     // If we have an absolute base URL, we strip the '/api' prefix used for the local proxy.
     return `${API_BASE}${path.replace(/^\/api/, '')}`;
   }
@@ -177,6 +179,13 @@ function parseName(raw)
 function formatNodeName(name)
 {
   return name.split('_').map(w => w.charAt(0).toUpperCase()+w.slice(1)).join(' ')
+}
+
+function getSelectedBloomLevel(levels)
+{
+  if (!Array.isArray(levels)||levels.length===0) return null
+  if (levels.includes('Mixed Bloom')) return null
+  return levels[0]||null
 }
 
 function extractQAFromSteps(steps)
@@ -247,6 +256,8 @@ const UI_DIFF_LABEL={
 /** Shows the "User" config message bubble */
 function UserConfigBubble({params})
 {
+  const selectedBloom=params.bloom_level||getSelectedBloomLevel(params.bloom_levels)||'Mixed'
+
   return (
     <div className="msg-group user">
       <div className="msg-sender" style={{justifyContent: 'flex-end'}}>
@@ -259,7 +270,7 @@ function UserConfigBubble({params})
           <div style={{display: 'flex', alignItems: 'center', gap: 6}}><span style={{display: 'flex', width: 14, height: 14, flexShrink: 0}}><Icon.Book /></span> <span>Subject: <strong>{params.subject}</strong></span></div>
           {params.subject_description&&<div style={{display: 'flex', alignItems: 'flex-start', gap: 6, lineHeight: 1.3}}><span style={{marginTop: 2, display: 'flex', width: 14, height: 14, flexShrink: 0}}><Icon.Info /></span> <span style={{opacity: 0.8, fontStyle: 'italic'}}>{params.subject_description}</span></div>}
           <div style={{display: 'flex', alignItems: 'center', gap: 6, marginTop: 4}}><span style={{display: 'flex', width: 14, height: 14, flexShrink: 0}}><Icon.Zap /></span> <span>Difficulty: <strong>{params.difficulty}</strong></span></div>
-          <div style={{display: 'flex', alignItems: 'center', gap: 6}}><span style={{display: 'flex', width: 14, height: 14, flexShrink: 0}}><Icon.Brain /></span> <span>Bloom: <strong>{params.bloom_level||'Mixed'}</strong></span></div>
+          <div style={{display: 'flex', alignItems: 'center', gap: 6}}><span style={{display: 'flex', width: 14, height: 14, flexShrink: 0}}><Icon.Brain /></span> <span>Bloom: <strong>{selectedBloom}</strong></span></div>
           <div style={{display: 'flex', alignItems: 'center', gap: 6}}><span style={{display: 'flex', width: 14, height: 14, flexShrink: 0}}><Icon.Hash /></span> <span>Questions per Batch: <strong>{params.N}</strong></span></div>
           <div style={{display: 'flex', alignItems: 'center', gap: 6}}><span style={{display: 'flex', width: 14, height: 14, flexShrink: 0}}><Icon.Sparkle /></span> <span>Parallel Workflows: <strong>{params.parallel_workflows}</strong></span></div>
         </div>
@@ -276,9 +287,10 @@ function AgentStreamBubble({steps=[], status, errorMsg})
   {
     if (stepsRef.current)
     {
-      const el = stepsRef.current;
-      requestAnimationFrame(() => {
-        el.scrollTop = el.scrollHeight;
+      const el=stepsRef.current;
+      requestAnimationFrame(() =>
+      {
+        el.scrollTop=el.scrollHeight;
       });
     }
   }, [steps])
@@ -302,7 +314,7 @@ function AgentStreamBubble({steps=[], status, errorMsg})
           </span>
         </div>
         <div className="stream-steps" ref={stepsRef}>
-          {(steps === undefined || steps.length===0) && status==='running' && (
+          {(steps===undefined||steps.length===0)&&status==='running'&&(
             <div className="stream-step running">
               <div className="stream-step__icon"><Icon.Loader /></div>
               <span>Initialising agent graph…</span>
@@ -612,14 +624,7 @@ function FormPanel({params, setParams, onGenerate, onClear, isRunning, subjects,
                         next=next.includes('Mixed Bloom')? []:['Mixed Bloom'];
                       } else
                       {
-                        next=next.filter(x => x!=='Mixed Bloom');
-                        if (next.includes(b.name))
-                        {
-                          next=next.filter(x => x!==b.name);
-                        } else
-                        {
-                          next.push(b.name);
-                        }
+                        next=next.includes(b.name)? []:[b.name];
                       }
                       return {...p, bloom_levels: next};
                     });
@@ -964,7 +969,7 @@ export default function App()
   useEffect(() =>
   {
     if (isInitialMount.current) {isInitialMount.current=false; return;}
-    
+
     // Only fetch if session CHANGED (prevents overwriting local state after generation)
     if (!activeSessionId)
     {
@@ -972,7 +977,7 @@ export default function App()
       lastFetchedId.current=null
       return
     }
-    
+
     if (activeSessionId===lastFetchedId.current) return
     if (isRunning) return
 
@@ -996,9 +1001,10 @@ export default function App()
   {
     if (feedRef.current)
     {
-      const el = feedRef.current;
-      requestAnimationFrame(() => {
-        el.scrollTop = el.scrollHeight;
+      const el=feedRef.current;
+      requestAnimationFrame(() =>
+      {
+        el.scrollTop=el.scrollHeight;
       });
     }
   }, [messages])
@@ -1011,8 +1017,8 @@ export default function App()
       const idx=copy.findIndex(m => m.id===streamId)
       if (idx!==-1)
       {
-        const currentPayload = copy[idx].payload || { steps: [], status: 'running' }
-        const updatedPayload = {
+        const currentPayload=copy[idx].payload||{steps: [], status: 'running'}
+        const updatedPayload={
           ...currentPayload,
           ...updater(currentPayload)
         }
@@ -1021,13 +1027,13 @@ export default function App()
           payload: updatedPayload
         }
         copy[idx]=updated
-        
+
         // OPTIMIZATION: Only persist to DB if status flipped to 'done' or 'error'
         if (updatedPayload.status!=='running')
         {
           saveMessage(updated, activeSessionId)
         }
-        
+
         return copy
       }
       return copy
@@ -1078,8 +1084,8 @@ export default function App()
       {
         if (copy[i].type==='agent-stream')
         {
-          const currentPayload = copy[i].payload || { steps: [], status: 'running' }
-          const updatedPayload = {
+          const currentPayload=copy[i].payload||{steps: [], status: 'running'}
+          const updatedPayload={
             ...currentPayload,
             ...updater(currentPayload)
           }
@@ -1106,7 +1112,7 @@ export default function App()
 
     // Look up an existing session for this subject+difficulty
     const existing=sessions.find(s => s.label===label)
-    const sessionId=existing? existing.id : crypto.randomUUID()
+    const sessionId=existing? existing.id:crypto.randomUUID()
     const isNewSession=!existing
 
     // Register or update session in DB
@@ -1125,7 +1131,7 @@ export default function App()
     if (isNewSession) setMessages([])
 
     setActiveSessionId(sessionId)
-    lastFetchedId.current = sessionId
+    lastFetchedId.current=sessionId
     setIsRunning(true)
 
     // 1) user config bubble
@@ -1137,7 +1143,7 @@ export default function App()
     addMessage(userMsg, sessionId)
 
     // 2) agent stream bubble
-    const streamMessageId = `stream-${Date.now()}`
+    const streamMessageId=`stream-${Date.now()}`
     const streamMsg={
       id: streamMessageId,
       type: 'agent-stream',
@@ -1155,12 +1161,14 @@ export default function App()
 
     try
     {
+      const selectedBloomLevel=getSelectedBloomLevel(params.bloom_levels)
+
       const body={
         user_id: userId,
         subject: params.subject,
         subject_description: desc,
         difficulty: params.difficulty,
-        bloom_level: params.bloom_level||null,
+        bloom_level: selectedBloomLevel,
         N: params.N,
         parallel_workflows: params.parallel_workflows,
         count: 0,
@@ -1207,7 +1215,7 @@ export default function App()
           if (parsed.step==='started')
           {
             updateAgentStream(streamMessageId, p => ({
-              steps: [...(p?.steps || []), {type: 'done', label: 'Stream started'}],
+              steps: [...(p?.steps||[]), {type: 'done', label: 'Stream started'}],
             }))
           } else if (parsed.step==='progress'&&parsed.data)
           {
@@ -1215,7 +1223,7 @@ export default function App()
             const name=parseName(raw)
 
             updateAgentStream(streamMessageId, p => ({
-              steps: [...(p?.steps || []), {
+              steps: [...(p?.steps||[]), {
                 type: 'done',
                 label: `✓ ${formatNodeName(name)}`,
                 raw,
@@ -1344,8 +1352,8 @@ export default function App()
   ):(
     <div className={`shell ${isSidebarOpen? 'sidebar-open':''} ${isConfigOpen? 'config-open':''}`}>
       {/* Backdrop for mobile overlays */}
-      {(isSidebarOpen || isConfigOpen) && (
-        <div className="drawer-overlay" onClick={() => { setIsSidebarOpen(false); setIsConfigOpen(false); }} />
+      {(isSidebarOpen||isConfigOpen)&&(
+        <div className="drawer-overlay" onClick={() => {setIsSidebarOpen(false); setIsConfigOpen(false);}} />
       )}
 
       {/* ── SIDEBAR ── */}
@@ -1393,79 +1401,79 @@ export default function App()
             {/* CHAT CONTAINER (Feed) */}
             <div className="chat-container">
               <div className="chat-feed" ref={feedRef}>
-              {isSessionLoading? (
-                <div className="session-loader">
-                  <div className="session-loader__spinner">
-                    <div className="session-loader__ring"></div>
-                    <div className="session-loader__icon"><Icon.QyroLogo /></div>
+                {isSessionLoading? (
+                  <div className="session-loader">
+                    <div className="session-loader__spinner">
+                      <div className="session-loader__ring"></div>
+                      <div className="session-loader__icon"><Icon.QyroLogo /></div>
+                    </div>
+                    <p className="session-loader__text">Loading session…</p>
                   </div>
-                  <p className="session-loader__text">Loading session…</p>
-                </div>
-              ):!activeSessionId? (
-                <div className="empty-state">
-                  <div className="empty-state__icon"><Icon.QyroLogo /></div>
-                  <h2 className="empty-state__title">Ready to Generate</h2>
-                  <p className="empty-state__desc">
-                    Configure your parameters and click <strong>Generate Q&A</strong> to start the agent pipeline.<br/>
-                    Questions will stream in real-time.
-                  </p>
-                  <button
-                    className="btn btn-primary empty-state__action mobile-only"
-                    type="button"
-                    onClick={() => setIsConfigOpen(true)}
-                  >
-                    <Icon.Send /> Generate Questions
-                  </button>
-                </div>
-              ):(
-                messages.map(msg =>
-                {
-                  if (msg.type==='user-config')
+                ):!activeSessionId? (
+                  <div className="empty-state">
+                    <div className="empty-state__icon"><Icon.QyroLogo /></div>
+                    <h2 className="empty-state__title">Ready to Generate</h2>
+                    <p className="empty-state__desc">
+                      Configure your parameters and click <strong>Generate Q&A</strong> to start the agent pipeline.<br />
+                      Questions will stream in real-time.
+                    </p>
+                    <button
+                      className="btn btn-primary empty-state__action mobile-only"
+                      type="button"
+                      onClick={() => setIsConfigOpen(true)}
+                    >
+                      <Icon.Send /> Generate Questions
+                    </button>
+                  </div>
+                ):(
+                  messages.map(msg =>
                   {
-                    return <UserConfigBubble key={msg.id} params={msg.params} />
-                  }
-                  if (msg.type==='agent-stream')
-                  {
-                    return (
-                      <AgentStreamBubble
-                        key={msg.id}
-                        {...(msg.payload || {})}
-                        id={msg.id}
-                      />
-                    )
-                  }
-                  if (msg.type==='qa-result')
-                  {
-                    return (
-                      <QAResultBubble
-                        key={msg.id}
-                        result={msg.result}
-                        params={msg.params}
-                      />
-                    )
-                  }
-                  if (msg.type==='system')
-                  {
-                    return <SystemMsg key={msg.id} msg={msg} />
-                  }
-                  return null
-                })
-              )}
-              {/* typing indicator while running */}
-              {isRunning&&(
-                <div className="msg-group agent" style={{paddingTop: 0}}>
-                  <div className="msg-bubble" style={{paddingTop: 10, paddingBottom: 10}}>
-                    <div className="typing-dots">
-                      <span /><span /><span />
+                    if (msg.type==='user-config')
+                    {
+                      return <UserConfigBubble key={msg.id} params={msg.params} />
+                    }
+                    if (msg.type==='agent-stream')
+                    {
+                      return (
+                        <AgentStreamBubble
+                          key={msg.id}
+                          {...(msg.payload||{})}
+                          id={msg.id}
+                        />
+                      )
+                    }
+                    if (msg.type==='qa-result')
+                    {
+                      return (
+                        <QAResultBubble
+                          key={msg.id}
+                          result={msg.result}
+                          params={msg.params}
+                        />
+                      )
+                    }
+                    if (msg.type==='system')
+                    {
+                      return <SystemMsg key={msg.id} msg={msg} />
+                    }
+                    return null
+                  })
+                )}
+                {/* typing indicator while running */}
+                {isRunning&&(
+                  <div className="msg-group agent" style={{paddingTop: 0}}>
+                    <div className="msg-bubble" style={{paddingTop: 10, paddingBottom: 10}}>
+                      <div className="typing-dots">
+                        <span /><span /><span />
+                      </div>
                     </div>
                   </div>
-                </div>
-              )}
+                )}
               </div>
             </div>
           </div>
 
-          <div className={`form-panel-wrapper ${isConfigOpen ? 'active' : ''}`}>
+          <div className={`form-panel-wrapper ${isConfigOpen? 'active':''}`}>
             <FormPanel
               params={params}
               setParams={setParams}
@@ -1476,7 +1484,7 @@ export default function App()
               difficulties={difficulties}
               bloomLevels={bloomLevels}
               cooldown={cooldown}
-              isOpen={true} 
+              isOpen={true}
             />
           </div>
         </div>
