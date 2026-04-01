@@ -149,6 +149,7 @@ const Icon={
 
 
 const API_BASE=import.meta.env.VITE_API_URL||'';
+const FRONTEND_COOLDOWN_SECONDS=45;
 
 /**
  * Utility to construct API URLs.
@@ -238,17 +239,6 @@ const UI_BLOOM_ICON={
   'L7 - Innovate': Icon.Star
 }
 
-const UI_DIFF_ICON={
-  'easy': () => <Icon.Circle fill="var(--success-neon)" color="var(--success-neon)" />,
-  'medium': () => <Icon.Circle fill="var(--warning)" color="var(--warning)" />,
-  'hard': () => <Icon.Circle fill="var(--danger)" color="var(--danger)" />
-}
-
-const UI_DIFF_LABEL={
-  'easy': 'Easy',
-  'medium': 'Medium',
-  'hard': 'Hard'
-}
 /* ────────────────────────────────────────────
    SUB-COMPONENTS
 ──────────────────────────────────────────── */
@@ -257,6 +247,7 @@ const UI_DIFF_LABEL={
 function UserConfigBubble({params})
 {
   const selectedBloom=params.bloom_level||getSelectedBloomLevel(params.bloom_levels)||'Mixed'
+  const difficultyLabel='Auto (Easy / Medium / Hard per workflow)'
 
   return (
     <div className="msg-group user">
@@ -269,7 +260,7 @@ function UserConfigBubble({params})
         <div style={{display: 'flex', flexDirection: 'column', gap: 4, fontSize: 13, opacity: 0.8}}>
           <div style={{display: 'flex', alignItems: 'center', gap: 6}}><span style={{display: 'flex', width: 14, height: 14, flexShrink: 0}}><Icon.Book /></span> <span>Subject: <strong>{params.subject}</strong></span></div>
           {params.subject_description&&<div style={{display: 'flex', alignItems: 'flex-start', gap: 6, lineHeight: 1.3}}><span style={{marginTop: 2, display: 'flex', width: 14, height: 14, flexShrink: 0}}><Icon.Info /></span> <span style={{opacity: 0.8, fontStyle: 'italic'}}>{params.subject_description}</span></div>}
-          <div style={{display: 'flex', alignItems: 'center', gap: 6, marginTop: 4}}><span style={{display: 'flex', width: 14, height: 14, flexShrink: 0}}><Icon.Zap /></span> <span>Difficulty: <strong>{params.difficulty}</strong></span></div>
+          <div style={{display: 'flex', alignItems: 'center', gap: 6, marginTop: 4}}><span style={{display: 'flex', width: 14, height: 14, flexShrink: 0}}><Icon.Zap /></span> <span>Difficulty: <strong>{difficultyLabel}</strong></span></div>
           <div style={{display: 'flex', alignItems: 'center', gap: 6}}><span style={{display: 'flex', width: 14, height: 14, flexShrink: 0}}><Icon.Brain /></span> <span>Bloom: <strong>{selectedBloom}</strong></span></div>
           <div style={{display: 'flex', alignItems: 'center', gap: 6}}><span style={{display: 'flex', width: 14, height: 14, flexShrink: 0}}><Icon.Hash /></span> <span>Questions per Batch: <strong>{params.N}</strong></span></div>
           <div style={{display: 'flex', alignItems: 'center', gap: 6}}><span style={{display: 'flex', width: 14, height: 14, flexShrink: 0}}><Icon.Sparkle /></span> <span>Parallel Workflows: <strong>{params.parallel_workflows}</strong></span></div>
@@ -323,7 +314,7 @@ function AgentStreamBubble({steps=[], status, errorMsg})
           {steps.length===0&&status==='error'&&(
             <div className="stream-step error">
               <div className="stream-step__icon"><Icon.X /></div>
-              <span>Agent encountered an error.</span>
+              <span>{errorMsg||'Agent encountered an error.'}</span>
             </div>
           )}
           {steps.map((step, i) => (
@@ -416,6 +407,55 @@ function QAResultBubble({result, params})
 {
   if (!result||!result.length) return null
 
+  const [difficultyFilter, setDifficultyFilter]=useState('all')
+  const [topicFilter, setTopicFilter]=useState('all')
+  const [bloomFilter, setBloomFilter]=useState('all')
+
+  const difficultyLevels=['easy', 'medium', 'hard']
+
+  const uniqueTopics=useMemo(() =>
+  {
+    const topics=new Set()
+    for (const item of result)
+    {
+      for (const tag of (item.topic_tags||[])) topics.add(tag)
+    }
+    return Array.from(topics).sort((a, b) => a.localeCompare(b))
+  }, [result])
+
+  const uniqueBlooms=useMemo(() =>
+  {
+    const blooms=new Set()
+    for (const item of result)
+    {
+      if (item.bloom_level) blooms.add(item.bloom_level)
+    }
+    return Array.from(blooms).sort((a, b) => a.localeCompare(b))
+  }, [result])
+
+  const filteredResult=useMemo(() =>
+  {
+    return result.filter(item =>
+    {
+      const diff=(item.difficulty||'').toLowerCase()
+      const matchesDifficulty=difficultyFilter==='all'||diff===difficultyFilter
+      const matchesTopic=topicFilter==='all'||(item.topic_tags||[]).includes(topicFilter)
+      const matchesBloom=bloomFilter==='all'||(item.bloom_level||'')===bloomFilter
+      return matchesDifficulty&&matchesTopic&&matchesBloom
+    })
+  }, [result, difficultyFilter, topicFilter, bloomFilter])
+
+  const countByDifficulty=useMemo(() =>
+  {
+    const counts={easy: 0, medium: 0, hard: 0}
+    for (const item of filteredResult)
+    {
+      const key=(item.difficulty||'').toLowerCase()
+      if (key in counts) counts[key]+=1
+    }
+    return counts
+  }, [filteredResult])
+
   return (
     <div className="msg-group agent">
       <div className="msg-sender">
@@ -434,15 +474,62 @@ function QAResultBubble({result, params})
           <button
             className="icon-btn"
             title="Download JSON"
-            onClick={() => downloadJSON(result, `qa_${params.subject}_${Date.now()}.json`)}
+            onClick={() => downloadJSON(filteredResult, `qa_${params.subject}_${Date.now()}.json`)}
           >
             <Icon.Download />
           </button>
         </div>
+        <div style={{padding: '12px 14px', marginBottom: 12, border: '1px solid var(--border)', borderRadius: 10, background: 'rgba(255,255,255,0.02)'}}>
+          <div style={{display: 'flex', justifyContent: 'space-between', gap: 10, flexWrap: 'wrap', marginBottom: 10}}>
+            <span style={{fontSize: 13, fontWeight: 600}}>Total Questions Generated ({params.subject})</span>
+            <span style={{fontSize: 12, opacity: 0.8}}>{filteredResult.length} / {result.length} shown</span>
+          </div>
+
+          <div style={{display: 'flex', gap: 8, flexWrap: 'wrap', marginBottom: 10}}>
+            <span className="badge">Easy: {countByDifficulty.easy}</span>
+            <span className="badge">Medium: {countByDifficulty.medium}</span>
+            <span className="badge">Hard: {countByDifficulty.hard}</span>
+          </div>
+
+          <div style={{display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: 8}}>
+            <div>
+              <label className="form-label" style={{fontSize: 11}}>Filter Difficulty</label>
+              <select className="form-select" value={difficultyFilter} onChange={e => setDifficultyFilter(e.target.value)}>
+                <option value="all">All</option>
+                {difficultyLevels.map(level => (
+                  <option key={level} value={level}>{level.charAt(0).toUpperCase()+level.slice(1)}</option>
+                ))}
+              </select>
+            </div>
+
+            <div>
+              <label className="form-label" style={{fontSize: 11}}>Filter Topic</label>
+              <select className="form-select" value={topicFilter} onChange={e => setTopicFilter(e.target.value)}>
+                <option value="all">All</option>
+                {uniqueTopics.map(topic => (
+                  <option key={topic} value={topic}>{topic}</option>
+                ))}
+              </select>
+            </div>
+
+            <div>
+              <label className="form-label" style={{fontSize: 11}}>Filter Bloom</label>
+              <select className="form-select" value={bloomFilter} onChange={e => setBloomFilter(e.target.value)}>
+                <option value="all">All</option>
+                {uniqueBlooms.map(level => (
+                  <option key={level} value={level}>{level}</option>
+                ))}
+              </select>
+            </div>
+          </div>
+        </div>
         <div className="qa-cards">
-          {result.map((item, i) => (
+          {filteredResult.map((item, i) => (
             <QACard key={item.id||i} item={item} index={i} />
           ))}
+          {filteredResult.length===0&&(
+            <div className="msg-bubble" style={{opacity: 0.8}}>No questions match the current filters.</div>
+          )}
         </div>
       </div>
     </div>
@@ -523,7 +610,7 @@ function Sidebar({sessions, activeId, onSelect, agentStatus, onNewChat, isSideba
 /* ────────────────────────────────────────────
    FORM PANEL
 ──────────────────────────────────────────── */
-function FormPanel({params, setParams, onGenerate, onClear, isRunning, subjects, difficulties, bloomLevels, cooldown, isOpen})
+function FormPanel({params, setParams, onGenerate, onClear, isRunning, subjects, bloomLevels, cooldown, isOpen})
 {
   // Compute exactly the grouped structure that the UI expects
   const groupedSubjects=useMemo(() =>
@@ -578,25 +665,8 @@ function FormPanel({params, setParams, onGenerate, onClear, isRunning, subjects,
         {/* Difficulty */}
         <div className="form-group">
           <label className="form-label">Difficulty</label>
-          <div className="pill-grid" role="group" aria-label="Difficulty">
-            {difficulties.map(d =>
-            {
-              const DiffIcon=UI_DIFF_ICON[d.name]||(() => <Icon.Circle />)
-              return (
-                <button
-                  key={d.id}
-                  id={`diff-${d.name}`}
-                  type="button"
-                  className={`pill pill--diff-${d.name} ${params.difficulty===d.name? 'pill--active':''}`}
-                  onClick={() => !isRunning&&setParams(p => ({...p, difficulty: d.name}))}
-                  disabled={isRunning}
-                  aria-pressed={params.difficulty===d.name}
-                >
-                  <span className="pill__emoji" style={{display: 'flex', width: 14, height: 14}}><DiffIcon /></span>
-                  {UI_DIFF_LABEL[d.name]||d.name}
-                </button>
-              )
-            })}
+          <div className="form-hint" style={{fontSize: 12}}>
+            Auto mode enabled: workflows rotate through <strong>Easy</strong>, <strong>Medium</strong>, and <strong>Hard</strong>.
           </div>
         </div>
 
@@ -685,12 +755,15 @@ function FormPanel({params, setParams, onGenerate, onClear, isRunning, subjects,
               type="range"
               id="parallel-slider"
               className="form-range"
-              min={1} max={10}
+              min={3} max={9} step={3}
               value={params.parallel_workflows}
               onChange={e => setParams(p => ({...p, parallel_workflows: Number(e.target.value)}))}
               disabled={isRunning}
             />
             <span className="range-val">{params.parallel_workflows}</span>
+          </div>
+          <div className="form-hint" style={{fontSize: 12}}>
+            Must be 3 x n. Distribution is balanced automatically (Easy / Medium / Hard).
           </div>
           <span className="form-hint" style={{fontWeight: 500}}>Total Questions = {params.N*params.parallel_workflows}</span>
         </div>
@@ -855,15 +928,14 @@ export default function App()
   const [showSettings, setShowSettings]=useState(false)
   const [params, setParams]=useState({
     subject: '',
-    difficulty: 'medium',
+    difficulty: 'auto',
     bloom_levels: [],
     N: 5,
-    parallel_workflows: 5
+    parallel_workflows: 3
   })
 
   // Metadata API state
   const [subjects, setSubjects]=useState([])
-  const [difficulties, setDifficulties]=useState([])
   const [bloomLevels, setBloomLevels]=useState([])
   const [isServerReady, setIsServerReady]=useState(false)
 
@@ -914,7 +986,6 @@ export default function App()
         {
           const data=await res.json()
           setSubjects(data.subjects)
-          setDifficulties(data.difficulties)
           setBloomLevels(data.bloom_levels)
           setIsServerReady(true)
         } else
@@ -1108,9 +1179,10 @@ export default function App()
     setIsConfigOpen(false)
 
     const desc=subjects.find(s => s.name===params.subject)?.description||''
-    const label=`${params.subject} (${params.difficulty})`
+    const selectedBloomLevel=getSelectedBloomLevel(params.bloom_levels)
+    const label=`${params.subject} (Auto Difficulty, ${selectedBloomLevel||'Mixed'}, ${params.parallel_workflows}WF)`
 
-    // Look up an existing session for this subject+difficulty
+    // Look up an existing session for this subject+bloom setup
     const existing=sessions.find(s => s.label===label)
     const sessionId=existing? existing.id:crypto.randomUUID()
     const isNewSession=!existing
@@ -1161,13 +1233,11 @@ export default function App()
 
     try
     {
-      const selectedBloomLevel=getSelectedBloomLevel(params.bloom_levels)
-
       const body={
         user_id: userId,
         subject: params.subject,
         subject_description: desc,
-        difficulty: params.difficulty,
+        difficulty: 'auto',
         bloom_level: selectedBloomLevel,
         N: params.N,
         parallel_workflows: params.parallel_workflows,
@@ -1183,12 +1253,16 @@ export default function App()
 
       if (!res.ok)
       {
-        if (res.status===429)
+        let serverMessage=`Server error: ${res.status}`
+        try
         {
           const errData=await res.json()
-          throw new Error(errData.detail||"Rate limit exceeded. Please wait.")
+          serverMessage=errData?.detail||errData?.message||serverMessage
+        } catch (parseErr)
+        {
+          // Keep fallback server status message when response body is not JSON.
         }
-        throw new Error(`Server error: ${res.status}`)
+        throw new Error(serverMessage)
       }
 
       const reader=res.body.getReader()
@@ -1239,16 +1313,18 @@ export default function App()
             updateAgentStream(streamMessageId, () => ({status: 'done'}))
           } else if (parsed.step==='error')
           {
-            updateAgentStream(streamMessageId, () => ({
+            const streamError=parsed.message||'Unknown stream error.'
+            console.error('[Stream Error]', streamError, parsed)
+            updateAgentStream(streamMessageId, p => ({
               status: 'error',
-              steps: [],
-              errorMsg: parsed.message,
+              steps: [...(p?.steps||[]), {type: 'error', label: `Error: ${streamError}`}],
+              errorMsg: streamError,
             }))
             addMessage({
               id: `err-${Date.now()}`,
               type: 'system',
-              iconName: 'x',
-              text: `Agent error: ${parsed.message}`,
+              iconName: 'alert',
+              text: `Agent error: ${streamError}`,
             }, sessionId)
           }
         }
@@ -1270,9 +1346,9 @@ export default function App()
           params: {...params}
         }, sessionId)
 
-        // Trigger 2 minute cooldown visually and locally
-        localStorage.setItem('nextRequestTime', Date.now()+120000)
-        setCooldown(120)
+        // Trigger frontend cooldown (45 seconds) visually and locally
+        localStorage.setItem('nextRequestTime', Date.now()+(FRONTEND_COOLDOWN_SECONDS*1000))
+        setCooldown(FRONTEND_COOLDOWN_SECONDS)
 
         // Refresh sidebar to move this subject to top
         fetchSessions()
@@ -1291,7 +1367,7 @@ export default function App()
         ...prev,
         {
           id: sessionId,
-          label: `${params.subject} (${params.difficulty})`,
+          label: `${params.subject} (Auto Difficulty, ${selectedBloomLevel||'Mixed'}, ${params.parallel_workflows}WF)`,
           qCount: params.N*params.parallel_workflows,
         },
       ])
@@ -1300,7 +1376,7 @@ export default function App()
     {
       if (err.name==='AbortError')
       {
-        updateLastAgentStream(() => ({status: 'error'}), sessionId)
+        updateLastAgentStream(() => ({status: 'error', errorMsg: 'Generation aborted by user.'}), sessionId)
         addMessage({
           id: `sys-${Date.now()}`,
           type: 'system',
@@ -1309,13 +1385,19 @@ export default function App()
         }, sessionId)
       } else
       {
-        updateLastAgentStream(() => ({status: 'error'}), sessionId)
-        const isRl=err.name==='Error'&&err.message.toLowerCase().includes('wait');
+        const errorMessage=err?.message||'Unexpected error occurred.'
+        console.error('[Generation Error]', err)
+        updateLastAgentStream(p => ({
+          status: 'error',
+          steps: [...(p?.steps||[]), {type: 'error', label: `Error: ${errorMessage}`}],
+          errorMsg: errorMessage,
+        }), sessionId)
+        const isRl=err.name==='Error'&&errorMessage.toLowerCase().includes('wait');
         addMessage({
           id: `sys-${Date.now()}`,
           type: 'system',
-          iconName: isRl? 'clock':'x',
-          text: isRl? err.message:`Connection error: ${err.message}. Is the FastAPI server running on port 8000?`,
+          iconName: isRl? 'clock':'alert',
+          text: isRl? errorMessage:`Connection error: ${errorMessage}`,
         }, sessionId)
       }
     } finally
@@ -1481,7 +1563,6 @@ export default function App()
               onClear={() => setMessages([])}
               isRunning={isRunning}
               subjects={subjects}
-              difficulties={difficulties}
               bloomLevels={bloomLevels}
               cooldown={cooldown}
               isOpen={true}
